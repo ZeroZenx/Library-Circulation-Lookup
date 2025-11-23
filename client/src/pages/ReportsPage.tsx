@@ -144,13 +144,22 @@ export default function ReportsPage() {
                         Call Number
                       </th>
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                        Checked Out By
+                        Checked Out By (Patron)
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                        Staff Member
                       </th>
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
                         Checked Out Date
                       </th>
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                        Due Date
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
                         Days Out
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                        Status
                       </th>
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
                         Note
@@ -179,8 +188,19 @@ export default function ReportsPage() {
                           <div className="text-sm text-gray-900">{item.checkedOutBy}</div>
                         </td>
                         <td className="px-6 py-4">
+                          <div className="text-sm text-gray-600 font-medium">{item.staffMember}</div>
+                        </td>
+                        <td className="px-6 py-4">
                           <div className="text-sm text-gray-500">
                             {formatDateTime(item.checkedOutAt)}
+                          </div>
+                        </td>
+                        <td className="px-6 py-4">
+                          <div className={`text-sm font-medium ${
+                            item.isOverdue ? 'text-red-600' : item.dueDate ? 'text-gray-900' : 'text-gray-500'
+                          }`}>
+                            {item.dueDate ? formatDate(item.dueDate) : 'No due date'}
+                            {item.isOverdue && ` (${item.daysOverdue} days overdue)`}
                           </div>
                         </td>
                         <td className="px-6 py-4">
@@ -188,8 +208,22 @@ export default function ReportsPage() {
                             item.daysOut > 30 ? 'text-red-600' : 'text-gray-900'
                           }`}>
                             {item.daysOut} {item.daysOut === 1 ? 'day' : 'days'}
-                            {item.daysOut > 30 && ' (Overdue)'}
                           </div>
+                        </td>
+                        <td className="px-6 py-4">
+                          {item.isOverdue ? (
+                            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                              Overdue
+                            </span>
+                          ) : item.dueDate ? (
+                            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                              On Time
+                            </span>
+                          ) : (
+                            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+                              No Due Date
+                            </span>
+                          )}
                         </td>
                         <td className="px-6 py-4">
                           <div className="text-sm text-gray-500">
@@ -294,13 +328,19 @@ export default function ReportsPage() {
                         Call Number
                       </th>
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                        Checked Out By
+                        Checked Out By (Patron)
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                        Staff Member
                       </th>
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
                         Checked Out Date
                       </th>
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                        Checked In By
+                        Checked In By (Patron)
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                        Checked In Staff
                       </th>
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
                         Checked In Date
@@ -332,6 +372,9 @@ export default function ReportsPage() {
                           <div className="text-sm text-gray-900">{report.checkedOutBy}</div>
                         </td>
                         <td className="px-6 py-4">
+                          <div className="text-sm text-gray-600 font-medium">{report.staffMember}</div>
+                        </td>
+                        <td className="px-6 py-4">
                           <div className="text-sm text-gray-500">
                             {formatDateTime(report.checkedOutAt)}
                           </div>
@@ -339,6 +382,11 @@ export default function ReportsPage() {
                         <td className="px-6 py-4">
                           <div className="text-sm text-gray-500">
                             {report.checkedInBy || '-'}
+                          </div>
+                        </td>
+                        <td className="px-6 py-4">
+                          <div className="text-sm text-gray-600 font-medium">
+                            {report.checkedInStaffMember || '-'}
                           </div>
                         </td>
                         <td className="px-6 py-4">

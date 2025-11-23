@@ -54,25 +54,25 @@ export async function getCheckoutStatus(id: string): Promise<CheckoutStatus> {
   return fetchJSON<CheckoutStatus>(url);
 }
 
-export async function checkoutItem(id: string, performedBy: string, note: string): Promise<CheckoutRecord> {
+export async function checkoutItem(id: string, performedBy: string, staffMember: string, note: string, dueDate?: string): Promise<CheckoutRecord> {
   const url = `${API_BASE}/items/${encodeURIComponent(id)}/checkout`;
   return fetchJSON<CheckoutRecord>(url, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
     },
-    body: JSON.stringify({ performedBy, note }),
+    body: JSON.stringify({ performedBy, staffMember, note, dueDate }),
   });
 }
 
-export async function checkinItem(id: string, performedBy: string, note: string): Promise<CheckoutRecord> {
+export async function checkinItem(id: string, performedBy: string, staffMember: string, note: string): Promise<CheckoutRecord> {
   const url = `${API_BASE}/items/${encodeURIComponent(id)}/checkin`;
   return fetchJSON<CheckoutRecord>(url, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
     },
-    body: JSON.stringify({ performedBy, note }),
+    body: JSON.stringify({ performedBy, staffMember, note }),
   });
 }
 

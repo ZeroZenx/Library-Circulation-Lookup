@@ -21,6 +21,13 @@ function loadCheckouts(): void {
   try {
     const data = fs.readFileSync(checkoutsPath, 'utf-8');
     const checkoutsObj = JSON.parse(data);
+    // Migrate old records to include staffMember field for backward compatibility
+    Object.keys(checkoutsObj).forEach((itemId) => {
+      checkoutsObj[itemId] = checkoutsObj[itemId].map((record: any) => ({
+        ...record,
+        staffMember: record.staffMember || record.performedBy || 'Unknown',
+      }));
+    });
     checkoutsCache = new Map(Object.entries(checkoutsObj));
   } catch (error) {
     console.error('Error loading checkouts:', error);
@@ -78,11 +85,28 @@ export function getCheckoutStatus(itemId: string): CheckoutStatus {
   const lastRecord = history[history.length - 1];
   
   if (lastRecord.action === 'CHECKOUT') {
+    const dueDate = lastRecord.dueDate;
+    let isOverdue = false;
+    let daysOverdue = 0;
+    
+    if (dueDate) {
+      const due = new Date(dueDate);
+      const now = new Date();
+      if (now > due) {
+        isOverdue = true;
+        daysOverdue = Math.floor((now.getTime() - due.getTime()) / (1000 * 60 * 60 * 24));
+      }
+    }
+    
     return {
       isCheckedOut: true,
       checkedOutBy: lastRecord.performedBy,
       checkedOutAt: lastRecord.timestamp,
       checkoutNote: lastRecord.note,
+      staffMember: lastRecord.staffMember,
+      dueDate: dueDate,
+      isOverdue,
+      daysOverdue,
       lastCheckoutRecord: lastRecord,
     };
   } else {
@@ -96,7 +120,7 @@ export function getCheckoutStatus(itemId: string): CheckoutStatus {
 /**
  * Checks out an item
  */
-export function checkoutItem(itemId: string, performedBy: string, note: string): CheckoutRecord {
+export function checkoutItem(itemId: string, performedBy: string, staffMember: string, note: string, dueDate?: string): CheckoutRecord {
   const status = getCheckoutStatus(itemId);
   
   if (status.isCheckedOut) {
@@ -108,8 +132,10 @@ export function checkoutItem(itemId: string, performedBy: string, note: string):
     itemId,
     action: 'CHECKOUT',
     performedBy,
+    staffMember,
     note,
     timestamp: new Date().toISOString(),
+    dueDate: dueDate,
   };
 
   if (!checkoutsCache.has(itemId)) {
@@ -125,7 +151,7 @@ export function checkoutItem(itemId: string, performedBy: string, note: string):
 /**
  * Checks in an item
  */
-export function checkinItem(itemId: string, performedBy: string, note: string): CheckoutRecord {
+export function checkinItem(itemId: string, performedBy: string, staffMember: string, note: string): CheckoutRecord {
   const status = getCheckoutStatus(itemId);
   
   if (!status.isCheckedOut) {
@@ -137,6 +163,7 @@ export function checkinItem(itemId: string, performedBy: string, note: string): 
     itemId,
     action: 'CHECKIN',
     performedBy,
+    staffMember,
     note,
     timestamp: new Date().toISOString(),
   };

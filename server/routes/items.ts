@@ -133,13 +133,16 @@ router.get('/:id/checkout', async (req: Request, res: Response) => {
 router.post('/:id/checkout', async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
-    const { performedBy, note } = req.body;
+    const { performedBy, staffMember, note, dueDate } = req.body;
 
     if (!performedBy) {
       return res.status(400).json({ error: 'performedBy is required' });
     }
+    if (!staffMember) {
+      return res.status(400).json({ error: 'staffMember is required' });
+    }
 
-    const record = checkoutItem(id, performedBy, note || '');
+    const record = checkoutItem(id, performedBy, staffMember, note || '', dueDate);
     res.status(201).json(record);
   } catch (error: any) {
     console.error('Error checking out item:', error);
@@ -157,13 +160,16 @@ router.post('/:id/checkout', async (req: Request, res: Response) => {
 router.post('/:id/checkin', async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
-    const { performedBy, note } = req.body;
+    const { performedBy, staffMember, note } = req.body;
 
     if (!performedBy) {
       return res.status(400).json({ error: 'performedBy is required' });
     }
+    if (!staffMember) {
+      return res.status(400).json({ error: 'staffMember is required' });
+    }
 
-    const record = checkinItem(id, performedBy, note || '');
+    const record = checkinItem(id, performedBy, staffMember, note || '');
     res.status(201).json(record);
   } catch (error: any) {
     console.error('Error checking in item:', error);

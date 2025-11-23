@@ -13,7 +13,7 @@ export default function CheckoutPanel({ itemId, onUpdate }: CheckoutPanelProps) 
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [action, setAction] = useState<'checkout' | 'checkin' | null>(null);
-  const [formData, setFormData] = useState({ performedBy: '', note: '' });
+  const [formData, setFormData] = useState({ performedBy: '', staffMember: '', note: '', dueDate: '' });
 
   useEffect(() => {
     loadStatus();
@@ -40,11 +40,11 @@ export default function CheckoutPanel({ itemId, onUpdate }: CheckoutPanelProps) 
     try {
       setSubmitting(true);
       if (action === 'checkout') {
-        await checkoutItem(itemId, formData.performedBy, formData.note);
+        await checkoutItem(itemId, formData.performedBy, formData.staffMember, formData.note, formData.dueDate || undefined);
       } else if (action === 'checkin') {
-        await checkinItem(itemId, formData.performedBy, formData.note);
+        await checkinItem(itemId, formData.performedBy, formData.staffMember, formData.note);
       }
-      setFormData({ performedBy: '', note: '' });
+      setFormData({ performedBy: '', staffMember: '', note: '', dueDate: '' });
       setAction(null);
       await loadStatus();
       if (onUpdate) {
@@ -88,9 +88,20 @@ export default function CheckoutPanel({ itemId, onUpdate }: CheckoutPanelProps) 
             </p>
             {isCheckedOut && status?.checkedOutBy && (
               <div className="mt-2 text-sm text-red-700">
-                <p>Checked out by: <strong>{status.checkedOutBy}</strong></p>
+                <p>Checked out to: <strong>{status.checkedOutBy}</strong></p>
+                {status.staffMember && (
+                  <p className="text-xs mt-1">Staff: <strong>{status.staffMember}</strong></p>
+                )}
                 {status.checkedOutAt && (
                   <p className="text-xs mt-1">On: {formatDateTime(status.checkedOutAt)}</p>
+                )}
+                {status.dueDate && (
+                  <p className={`text-xs mt-1 font-medium ${
+                    status.isOverdue ? 'text-red-600' : 'text-gray-700'
+                  }`}>
+                    Due: {formatDate(status.dueDate)}
+                    {status.isOverdue && ` (${status.daysOverdue} days overdue)`}
+                  </p>
                 )}
                 {status.checkoutNote && (
                   <p className="text-xs mt-1 italic">Note: {status.checkoutNote}</p>
@@ -125,17 +136,44 @@ export default function CheckoutPanel({ itemId, onUpdate }: CheckoutPanelProps) 
         <form onSubmit={handleSubmit} className="border-t border-gray-200 pt-4">
           <div className="mb-4">
             <label className="block text-sm font-medium text-gray-700 mb-1">
-              {action === 'checkout' ? 'Who is checking this out?' : 'Who is checking this in?'}
+              {action === 'checkout' ? 'Patron/Borrower Name' : 'Patron Name'}
             </label>
             <input
               type="text"
               value={formData.performedBy}
               onChange={(e) => setFormData({ ...formData, performedBy: e.target.value })}
               className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-              placeholder="Enter name"
+              placeholder="Enter patron/borrower name"
               required
             />
           </div>
+          <div className="mb-4">
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Staff Member
+            </label>
+            <input
+              type="text"
+              value={formData.staffMember}
+              onChange={(e) => setFormData({ ...formData, staffMember: e.target.value })}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              placeholder="Enter your name (staff member)"
+              required
+            />
+          </div>
+          {action === 'checkout' && (
+            <div className="mb-4">
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Due Date (optional)
+              </label>
+              <input
+                type="date"
+                value={formData.dueDate}
+                onChange={(e) => setFormData({ ...formData, dueDate: e.target.value })}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                min={new Date().toISOString().split('T')[0]}
+              />
+            </div>
+          )}
           <div className="mb-4">
             <label className="block text-sm font-medium text-gray-700 mb-1">
               Note (optional)
@@ -151,7 +189,7 @@ export default function CheckoutPanel({ itemId, onUpdate }: CheckoutPanelProps) 
           <div className="flex space-x-2">
             <button
               type="submit"
-              disabled={submitting || !formData.performedBy.trim()}
+              disabled={submitting || !formData.performedBy.trim() || !formData.staffMember.trim()}
               className={`flex-1 px-4 py-2 rounded-md text-sm font-medium focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed ${
                 action === 'checkout'
                   ? 'bg-blue-600 text-white hover:bg-blue-700 focus:ring-blue-500'
@@ -164,7 +202,7 @@ export default function CheckoutPanel({ itemId, onUpdate }: CheckoutPanelProps) 
               type="button"
               onClick={() => {
                 setAction(null);
-                setFormData({ performedBy: '', note: '' });
+                setFormData({ performedBy: '', staffMember: '', note: '', dueDate: '' });
               }}
               className="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-gray-500"
             >
@@ -193,7 +231,10 @@ export default function CheckoutPanel({ itemId, onUpdate }: CheckoutPanelProps) 
                     <p className="font-medium">
                       {record.action === 'CHECKOUT' ? 'Checked Out' : 'Checked In'}
                     </p>
-                    <p className="text-xs mt-1">By: {record.performedBy}</p>
+                    <p className="text-xs mt-1">Patron: {record.performedBy}</p>
+                    {record.staffMember && (
+                      <p className="text-xs mt-1">Staff: <strong>{record.staffMember}</strong></p>
+                    )}
                     {record.note && (
                       <p className="text-xs mt-1 italic">Note: {record.note}</p>
                     )}

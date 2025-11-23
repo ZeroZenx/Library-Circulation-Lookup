@@ -6,9 +6,13 @@ import { getAllItems, getItemById } from './csvLoader';
 export interface CheckedOutItem {
   item: Item;
   checkedOutBy: string;
+  staffMember: string;
   checkedOutAt: string;
   checkoutNote?: string;
   daysOut: number;
+  dueDate?: string;
+  isOverdue?: boolean;
+  daysOverdue?: number;
 }
 
 export interface CheckoutHistoryReport {
@@ -16,8 +20,10 @@ export interface CheckoutHistoryReport {
   checkoutRecord: CheckoutRecord;
   checkinRecord?: CheckoutRecord;
   checkedOutBy: string;
+  staffMember: string;
   checkedOutAt: string;
   checkedInBy?: string;
+  checkedInStaffMember?: string;
   checkedInAt?: string;
   daysOut?: number;
   checkoutNote?: string;
@@ -49,15 +55,28 @@ export function getCheckedOutItems(): CheckedOutItem[] {
       checkedOut.push({
         item,
         checkedOutBy: status.checkedOutBy,
+        staffMember: status.staffMember || 'Unknown',
         checkedOutAt: status.checkedOutAt,
         checkoutNote: status.checkoutNote,
         daysOut,
+        dueDate: status.dueDate,
+        isOverdue: status.isOverdue,
+        daysOverdue: status.daysOverdue,
       });
     }
   });
 
-  // Sort by days out (longest first)
-  return checkedOut.sort((a, b) => b.daysOut - a.daysOut);
+  // Sort by overdue status first, then by days out (longest first)
+  return checkedOut.sort((a, b) => {
+    // Overdue items first
+    if (a.isOverdue && !b.isOverdue) return -1;
+    if (!a.isOverdue && b.isOverdue) return 1;
+    // Then by days overdue (if overdue) or days out
+    if (a.isOverdue && b.isOverdue) {
+      return (b.daysOverdue || 0) - (a.daysOverdue || 0);
+    }
+    return b.daysOut - a.daysOut;
+  });
 }
 
 /**
@@ -149,8 +168,10 @@ export function getCheckoutHistoryReport(filters?: ReportingFilters): CheckoutHi
           checkoutRecord,
           checkinRecord,
           checkedOutBy: checkoutRecord.performedBy,
+          staffMember: checkoutRecord.staffMember || 'Unknown',
           checkedOutAt: checkoutRecord.timestamp,
           checkedInBy: checkinRecord?.performedBy,
+          checkedInStaffMember: checkinRecord?.staffMember,
           checkedInAt: checkinRecord?.timestamp,
           daysOut,
           checkoutNote: checkoutRecord.note || undefined,
@@ -176,7 +197,7 @@ export function getReportingStats() {
   
   const totalCheckedOut = checkedOut.length;
   const totalTransactions = history.length;
-  const overdueItems = checkedOut.filter(item => item.daysOut > 30).length;
+  const overdueItems = checkedOut.filter(item => item.isOverdue || item.daysOut > 30).length;
   
   const avgDaysOut = checkedOut.length > 0
     ? Math.round(checkedOut.reduce((sum, item) => sum + item.daysOut, 0) / checkedOut.length)

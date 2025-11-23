@@ -99,8 +99,10 @@ export interface CheckoutRecord {
   itemId: string;
   action: 'CHECKOUT' | 'CHECKIN';
   performedBy: string;
+  staffMember: string;
   note: string;
   timestamp: string;
+  dueDate?: string;
 }
 
 export interface CheckoutStatus {
@@ -108,6 +110,10 @@ export interface CheckoutStatus {
   checkedOutBy?: string;
   checkedOutAt?: string;
   checkoutNote?: string;
+  staffMember?: string;
+  dueDate?: string;
+  isOverdue?: boolean;
+  daysOverdue?: number;
   lastCheckoutRecord?: CheckoutRecord;
   history?: CheckoutRecord[];
 }
@@ -115,9 +121,13 @@ export interface CheckoutStatus {
 export interface CheckedOutItem {
   item: Item;
   checkedOutBy: string;
+  staffMember: string;
   checkedOutAt: string;
   checkoutNote?: string;
   daysOut: number;
+  dueDate?: string;
+  isOverdue?: boolean;
+  daysOverdue?: number;
 }
 
 export interface CheckoutHistoryReport {
@@ -125,8 +135,10 @@ export interface CheckoutHistoryReport {
   checkoutRecord: CheckoutRecord;
   checkinRecord?: CheckoutRecord;
   checkedOutBy: string;
+  staffMember: string;
   checkedOutAt: string;
   checkedInBy?: string;
+  checkedInStaffMember?: string;
   checkedInAt?: string;
   daysOut?: number;
   checkoutNote?: string;
