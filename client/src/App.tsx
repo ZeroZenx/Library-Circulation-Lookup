@@ -3,6 +3,7 @@ import Layout from './components/Layout';
 import SearchPage from './pages/SearchPage';
 import ItemDetailPage from './pages/ItemDetailPage';
 import AnalyticsPage from './pages/AnalyticsPage';
+import ReportsPage from './pages/ReportsPage';
 
 function App() {
   return (
@@ -13,6 +14,7 @@ function App() {
           <Route path="search" element={<SearchPage />} />
           <Route path="items/:id" element={<ItemDetailPage />} />
           <Route path="analytics" element={<AnalyticsPage />} />
+          <Route path="reports" element={<ReportsPage />} />
         </Route>
       </Routes>
     </BrowserRouter>

@@ -1,4 +1,4 @@
-import { Item, SearchParams, SearchResult, Note, Stats, CheckoutStatus, CheckoutRecord } from './types';
+import { Item, SearchParams, SearchResult, Note, Stats, CheckoutStatus, CheckoutRecord, CheckedOutItem, CheckoutHistoryReport, ReportingStats } from './types';
 
 const API_BASE = '/api';
 
@@ -74,5 +74,34 @@ export async function checkinItem(id: string, performedBy: string, note: string)
     },
     body: JSON.stringify({ performedBy, note }),
   });
+}
+
+export async function getCheckedOutItems(): Promise<{ items: CheckedOutItem[]; count: number }> {
+  const url = `${API_BASE}/reports/checked-out`;
+  return fetchJSON<{ items: CheckedOutItem[]; count: number }>(url);
+}
+
+export async function getCheckoutHistory(filters?: {
+  status?: 'checked-out' | 'checked-in' | 'all';
+  fromDate?: string;
+  toDate?: string;
+  performedBy?: string;
+  itemId?: string;
+}): Promise<{ reports: CheckoutHistoryReport[]; count: number }> {
+  const queryParams = new URLSearchParams();
+  if (filters) {
+    Object.entries(filters).forEach(([key, value]) => {
+      if (value !== undefined && value !== null && value !== '') {
+        queryParams.append(key, String(value));
+      }
+    });
+  }
+  const url = `${API_BASE}/reports/history?${queryParams.toString()}`;
+  return fetchJSON<{ reports: CheckoutHistoryReport[]; count: number }>(url);
+}
+
+export async function getReportingStats(): Promise<ReportingStats> {
+  const url = `${API_BASE}/reports/stats`;
+  return fetchJSON<ReportingStats>(url);
 }
 

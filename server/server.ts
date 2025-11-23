@@ -5,6 +5,7 @@ import { loadCSV } from './services/csvLoader';
 import itemsRouter from './routes/items';
 import statsRouter from './routes/stats';
 import notesRouter from './routes/notes';
+import reportsRouter from './routes/reports';
 
 const app = express();
 
@@ -25,6 +26,7 @@ app.get('/api/health', (req, res) => {
 app.use('/api/items', itemsRouter);
 app.use('/api/stats', statsRouter);
 app.use('/api/notes', notesRouter);
+app.use('/api/reports', reportsRouter);
 
 // Error handling middleware
 app.use((err: Error, req: express.Request, res: express.Response, next: express.NextFunction) => {

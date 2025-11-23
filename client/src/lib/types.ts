@@ -112,3 +112,32 @@ export interface CheckoutStatus {
   history?: CheckoutRecord[];
 }
 
+export interface CheckedOutItem {
+  item: Item;
+  checkedOutBy: string;
+  checkedOutAt: string;
+  checkoutNote?: string;
+  daysOut: number;
+}
+
+export interface CheckoutHistoryReport {
+  item: Item;
+  checkoutRecord: CheckoutRecord;
+  checkinRecord?: CheckoutRecord;
+  checkedOutBy: string;
+  checkedOutAt: string;
+  checkedInBy?: string;
+  checkedInAt?: string;
+  daysOut?: number;
+  checkoutNote?: string;
+  checkinNote?: string;
+}
+
+export interface ReportingStats {
+  totalCheckedOut: number;
+  totalTransactions: number;
+  overdueItems: number;
+  avgDaysOut: number;
+  avgLoanDuration: number;
+}
+
